@@ -18,7 +18,7 @@
 	},
 	"scripts": {
 		"start": "nodemon --exec babel-node src/index.js",
-		"prodStart": "node --exec babel-node src/index.js",
+		"prodStart": "npx babel-node src/index.js",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"keywords": [],
