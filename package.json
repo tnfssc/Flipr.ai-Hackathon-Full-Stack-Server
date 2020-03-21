@@ -17,8 +17,8 @@
 		"@babel/preset-env": "^7.9.0"
 	},
 	"scripts": {
-		"start": "nodemon --exec babel-node src/index.js",
-		"prodStart": "npx babel-node src/index.js",
+		"prodStart": "nodemon --exec babel-node src/index.js",
+		"start": "npx babel-node src/index.js",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"keywords": [],
