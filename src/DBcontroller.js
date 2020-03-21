@@ -57,6 +57,16 @@ dBfuncs.addUser = (username, password, email) => {
 	})
 }
 
+dBfuncs.loginUser = (username, loginToken) => {
+	const query = "UPDATE Users SET loginToken = '" + loginToken + "' WHERE username = '" + username + "';"
+	return new Promise((resolve, reject) => {
+		pool.query(query, (err, results) => {
+			if (err) return reject(err)
+			return resolve(results)
+		})
+	})
+}
+
 dBfuncs.updatePassword = async (email, password) => {
 	dBfuncs.findUser(undefined, email)
 	const query =

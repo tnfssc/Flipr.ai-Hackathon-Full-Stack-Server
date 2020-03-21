@@ -6,6 +6,7 @@ CREATE TABLE Users (
     new_passwd VARCHAR(255),
     verified NUMERIC(1) NOT NULL,
     emailVerifyId VARCHAR(255) NOT NULL,
+    loginToken VARCHAR(255),
     PRIMARY KEY (id)
 );
 

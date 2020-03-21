@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import express from 'express'
 import dBfuncs from './DBcontroller'
+import crypto from 'crypto'
 
 const app = express()
 
@@ -51,7 +52,9 @@ app.post('/login', async (req, res) => {
 		if (userData) {
 			if (userData.username == req.body.username && userData.passwd == req.body.password) {
 				if (userData.verified) {
-					res.send({ token: 'TOKEN_HERE' })
+					const loginToken = crypto.randomBytes(40).toString('hex')
+					dBfuncs.loginUser(req.body.username, loginToken)
+					res.send({ username: req.body.username, token: loginToken })
 				} else {
 					res.send('Email is not verified')
 				}
