@@ -1,38 +1,109 @@
-import 'dotenv/config'
-import express from 'express'
-import dBfuncs from './DBcontroller'
-import crypto from 'crypto'
+'use strict'
 
-const app = express()
+require('dotenv/config')
 
-app.use(express.json())
+var _express = _interopRequireDefault(require('express'))
 
+var _DBcontroller = _interopRequireDefault(require('./DBcontroller'))
+
+var _crypto = _interopRequireDefault(require('crypto'))
+
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj }
+}
+
+function _slicedToArray(arr, i) {
+	return (
+		_arrayWithHoles(arr) ||
+		_iterableToArrayLimit(arr, i) ||
+		_unsupportedIterableToArray(arr, i) ||
+		_nonIterableRest()
+	)
+}
+
+function _nonIterableRest() {
+	throw new TypeError(
+		'Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.'
+	)
+}
+
+function _unsupportedIterableToArray(o, minLen) {
+	if (!o) return
+	if (typeof o === 'string') return _arrayLikeToArray(o, minLen)
+	var n = Object.prototype.toString.call(o).slice(8, -1)
+	if (n === 'Object' && o.constructor) n = o.constructor.name
+	if (n === 'Map' || n === 'Set') return Array.from(n)
+	if (n === 'Arguments' || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen)
+}
+
+function _arrayLikeToArray(arr, len) {
+	if (len == null || len > arr.length) len = arr.length
+	for (var i = 0, arr2 = new Array(len); i < len; i++) {
+		arr2[i] = arr[i]
+	}
+	return arr2
+}
+
+function _iterableToArrayLimit(arr, i) {
+	if (typeof Symbol === 'undefined' || !(Symbol.iterator in Object(arr))) return
+	var _arr = []
+	var _n = true
+	var _d = false
+	var _e = undefined
+	try {
+		for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+			_arr.push(_s.value)
+			if (i && _arr.length === i) break
+		}
+	} catch (err) {
+		_d = true
+		_e = err
+	} finally {
+		try {
+			if (!_n && _i['return'] != null) _i['return']()
+		} finally {
+			if (_d) throw _e
+		}
+	}
+	return _arr
+}
+
+function _arrayWithHoles(arr) {
+	if (Array.isArray(arr)) return arr
+}
+
+var app = (0, _express.default)()
+app.use(_express.default.json())
 app.use(function(req, res, next) {
 	res.header('Access-Control-Allow-Origin', '*')
 	res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
 	next()
 })
 
-const checkExistingUser = async (username, email) => {
-	const [userData] = await dBfuncs.findUser(username, email)
+var checkExistingUser = async function checkExistingUser(username, email) {
+	var _await$dBfuncs$findUs = await _DBcontroller.default.findUser(username, email),
+		_await$dBfuncs$findUs2 = _slicedToArray(_await$dBfuncs$findUs, 1),
+		userData = _await$dBfuncs$findUs2[0]
+
 	if (userData === undefined) return false
 	else if (userData.username === username) return true
 	else if (userData.email === email) return true
 	else return false
 }
 
-const validateRegister = (username, password, email) => {
+var validateRegister = function validateRegister(username, password, email) {
 	if (!/^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(email)) return false
 	else if (username.length < 4 || password.length < 8) return false
 	else return true
 }
 
-app.post('/forgotpassword', (req, res) => {
+app.post('/forgotpassword', function(req, res) {
 	if (req.body.email && req.body.password && req.body.confirmpassword) {
 		if (req.body.password === req.body.confirmpassword) {
-			checkExistingUser(undefined, req.body.email).then(exists => {
+			checkExistingUser(undefined, req.body.email).then(function(exists) {
 				if (exists) {
-					dBfuncs.newPassword(req.body.email, req.body.password)
+					_DBcontroller.default.newPassword(req.body.email, req.body.password)
+
 					res.send('Check your email')
 				} else {
 					res.send('User does not exist')
@@ -45,16 +116,23 @@ app.post('/forgotpassword', (req, res) => {
 		res.send('No')
 	}
 })
-
-app.post('/login', async (req, res) => {
+app.post('/login', async function(req, res) {
 	if (req.body.username && req.body.password) {
-		const [userData] = await dBfuncs.findUser(req.body.username)
+		var _await$dBfuncs$findUs3 = await _DBcontroller.default.findUser(req.body.username),
+			_await$dBfuncs$findUs4 = _slicedToArray(_await$dBfuncs$findUs3, 1),
+			userData = _await$dBfuncs$findUs4[0]
+
 		if (userData) {
 			if (userData.username == req.body.username && userData.passwd == req.body.password) {
 				if (userData.verified) {
-					const loginToken = crypto.randomBytes(40).toString('hex')
-					dBfuncs.loginUser(req.body.username, loginToken)
-					res.send({ username: req.body.username, token: loginToken })
+					var loginToken = _crypto.default.randomBytes(40).toString('hex')
+
+					_DBcontroller.default.loginUser(req.body.username, loginToken)
+
+					res.send({
+						username: req.body.username,
+						token: loginToken,
+					})
 				} else {
 					res.send('Email is not verified')
 				}
@@ -68,41 +146,47 @@ app.post('/login', async (req, res) => {
 		res.sendStatus(406)
 	}
 })
-
-app.get('/verifyemail', async (req, res) => {
+app.get('/verifyemail', async function(req, res) {
 	if (req.query.token && req.query.username) {
-		const [userData] = await dBfuncs.findUser(req.query.username)
+		var _await$dBfuncs$findUs5 = await _DBcontroller.default.findUser(req.query.username),
+			_await$dBfuncs$findUs6 = _slicedToArray(_await$dBfuncs$findUs5, 1),
+			userData = _await$dBfuncs$findUs6[0]
+
 		if (userData) {
 			if (userData.verified === 0) {
 				if (req.query.token === userData.emailVerifyId) {
-					dBfuncs.verifyUser(req.query.username)
+					_DBcontroller.default.verifyUser(req.query.username)
+
 					res.send('Verified successfully, now you can login')
 				} else res.send('Do not try random combos')
 			} else res.send('This user already verified')
 		} else res.send('(-__-)')
 	} else res.send('(-_-)')
 })
-
-app.get('/resetpassword', async (req, res) => {
+app.get('/resetpassword', async function(req, res) {
 	if (req.query.token && req.query.email) {
-		const [userData] = await dBfuncs.findUser(undefined, req.query.email)
+		var _await$dBfuncs$findUs7 = await _DBcontroller.default.findUser(undefined, req.query.email),
+			_await$dBfuncs$findUs8 = _slicedToArray(_await$dBfuncs$findUs7, 1),
+			userData = _await$dBfuncs$findUs8[0]
+
 		if (userData) {
 			if (req.query.token === userData.emailVerifyId) {
-				dBfuncs.updatePassword(req.query.email, userData.new_passwd)
+				_DBcontroller.default.updatePassword(req.query.email, userData.new_passwd)
+
 				res.send('Reset successful, now you can login. Your username is: ' + userData.username)
 			} else res.send('Do not try random combos')
 		} else res.send('(-__-)')
 	} else res.send('(-_-)')
 })
-
-app.post('/register', (req, res) => {
+app.post('/register', function(req, res) {
 	if (req.body.username && req.body.password && req.body.confirmpassword) {
 		if (req.body.password === req.body.confirmpassword) {
-			checkExistingUser(req.body.username, req.body.email).then(exists => {
+			checkExistingUser(req.body.username, req.body.email).then(function(exists) {
 				if (exists) res.send('User with this username/email already exists')
 				else {
 					if (validateRegister(req.body.username, req.body.password, req.body.email)) {
-						dBfuncs.addUser(req.body.username, req.body.password, req.body.email)
+						_DBcontroller.default.addUser(req.body.username, req.body.password, req.body.email)
+
 						res.send('Registered')
 					} else {
 						res.send('Please enter valid username and/or password')
@@ -116,7 +200,6 @@ app.post('/register', (req, res) => {
 		res.sendStatus(406)
 	}
 })
-
-app.listen(process.env.PORT || 3600, () => {
+app.listen(process.env.PORT || 3600, function() {
 	console.log('Listening on port ' + process.env.PORT || 3600)
 })

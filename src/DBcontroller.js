@@ -1,9 +1,83 @@
-import mysql from 'mysql'
-import 'dotenv/config'
-import crypto from 'crypto'
-import nodemailer from 'nodemailer'
+'use strict'
 
-const transporter = nodemailer.createTransport({
+Object.defineProperty(exports, '__esModule', {
+	value: true,
+})
+exports.default = void 0
+
+var _mysql = _interopRequireDefault(require('mysql'))
+
+require('dotenv/config')
+
+var _crypto = _interopRequireDefault(require('crypto'))
+
+var _nodemailer = _interopRequireDefault(require('nodemailer'))
+
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj }
+}
+
+function _slicedToArray(arr, i) {
+	return (
+		_arrayWithHoles(arr) ||
+		_iterableToArrayLimit(arr, i) ||
+		_unsupportedIterableToArray(arr, i) ||
+		_nonIterableRest()
+	)
+}
+
+function _nonIterableRest() {
+	throw new TypeError(
+		'Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.'
+	)
+}
+
+function _unsupportedIterableToArray(o, minLen) {
+	if (!o) return
+	if (typeof o === 'string') return _arrayLikeToArray(o, minLen)
+	var n = Object.prototype.toString.call(o).slice(8, -1)
+	if (n === 'Object' && o.constructor) n = o.constructor.name
+	if (n === 'Map' || n === 'Set') return Array.from(n)
+	if (n === 'Arguments' || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen)
+}
+
+function _arrayLikeToArray(arr, len) {
+	if (len == null || len > arr.length) len = arr.length
+	for (var i = 0, arr2 = new Array(len); i < len; i++) {
+		arr2[i] = arr[i]
+	}
+	return arr2
+}
+
+function _iterableToArrayLimit(arr, i) {
+	if (typeof Symbol === 'undefined' || !(Symbol.iterator in Object(arr))) return
+	var _arr = []
+	var _n = true
+	var _d = false
+	var _e = undefined
+	try {
+		for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+			_arr.push(_s.value)
+			if (i && _arr.length === i) break
+		}
+	} catch (err) {
+		_d = true
+		_e = err
+	} finally {
+		try {
+			if (!_n && _i['return'] != null) _i['return']()
+		} finally {
+			if (_d) throw _e
+		}
+	}
+	return _arr
+}
+
+function _arrayWithHoles(arr) {
+	if (Array.isArray(arr)) return arr
+}
+
+var transporter = _nodemailer.default.createTransport({
 	service: 'gmail',
 	auth: {
 		user: process.env.EMAILVERIFIER_ADDRESS,
@@ -11,7 +85,7 @@ const transporter = nodemailer.createTransport({
 	},
 })
 
-const pool = mysql.createPool({
+var pool = _mysql.default.createPool({
 	connectionLimit: 10,
 	password: process.env.DATABASE_PASSWORD,
 	user: process.env.DATABASE_USERNAME,
@@ -20,11 +94,12 @@ const pool = mysql.createPool({
 	port: process.env.DATABASE_PORT,
 })
 
-const dBfuncs = {}
+var dBfuncs = {}
 
-dBfuncs.addUser = (username, password, email) => {
-	var emailVerifyId = crypto.randomBytes(40).toString('hex')
-	const query =
+dBfuncs.addUser = function(username, password, email) {
+	var emailVerifyId = _crypto.default.randomBytes(40).toString('hex')
+
+	var query =
 		"INSERT INTO Users (username, verified, email, passwd, emailVerifyId) VALUES ('" +
 		username +
 		"', '" +
@@ -36,7 +111,7 @@ dBfuncs.addUser = (username, password, email) => {
 		"', '" +
 		emailVerifyId +
 		"');"
-	const EmailToBeSent = {
+	var EmailToBeSent = {
 		from: process.env.EMAILVERIFIER_ADDRESS,
 		to: email,
 		subject: 'Please click the link to verify email',
@@ -49,44 +124,49 @@ dBfuncs.addUser = (username, password, email) => {
 			//console.log('Email sent: ' + info.response)
 		}
 	})
-	return new Promise((resolve, reject) => {
-		pool.query(query, (err, results) => {
+	return new Promise(function(resolve, reject) {
+		pool.query(query, function(err, results) {
 			if (err) return reject(err)
 			return resolve(results)
 		})
 	})
 }
 
-dBfuncs.loginUser = (username, loginToken) => {
-	const query = "UPDATE Users SET loginToken = '" + loginToken + "' WHERE username = '" + username + "';"
-	return new Promise((resolve, reject) => {
-		pool.query(query, (err, results) => {
+dBfuncs.loginUser = function(username, loginToken) {
+	var query = "UPDATE Users SET loginToken = '" + loginToken + "' WHERE username = '" + username + "';"
+	return new Promise(function(resolve, reject) {
+		pool.query(query, function(err, results) {
 			if (err) return reject(err)
 			return resolve(results)
 		})
 	})
 }
 
-dBfuncs.updatePassword = async (email, password) => {
+dBfuncs.updatePassword = async function(email, password) {
 	dBfuncs.findUser(undefined, email)
-	const query =
+	var query =
 		"UPDATE Users SET passwd = '" + password + "', new_passwd='', emailVerifyId = '' WHERE email = '" + email + "';"
-	return new Promise((resolve, reject) => {
-		pool.query(query, (err, results) => {
+	return new Promise(function(resolve, reject) {
+		pool.query(query, function(err, results) {
 			if (err) return reject(err)
 			return resolve(results)
 		})
 	})
 }
 
-dBfuncs.newPassword = async (email, password) => {
-	var emailVerifyId = crypto.randomBytes(40).toString('hex')
-	const [userData] = await dBfuncs.findUser(undefined, email)
+dBfuncs.newPassword = async function(email, password) {
+	var emailVerifyId = _crypto.default.randomBytes(40).toString('hex')
+
+	var _await$dBfuncs$findUs = await dBfuncs.findUser(undefined, email),
+		_await$dBfuncs$findUs2 = _slicedToArray(_await$dBfuncs$findUs, 1),
+		userData = _await$dBfuncs$findUs2[0]
+
 	if (userData === undefined) {
 		console.log('User not found')
 		return
 	}
-	const query =
+
+	var query =
 		"UPDATE Users SET new_passwd = '" +
 		password +
 		"', emailVerifyId = '" +
@@ -94,7 +174,7 @@ dBfuncs.newPassword = async (email, password) => {
 		"' WHERE email = '" +
 		email +
 		"';"
-	const EmailToBeSent = {
+	var EmailToBeSent = {
 		from: process.env.EMAILVERIFIER_ADDRESS,
 		to: email,
 		subject: 'Please click the link to confirm reset password',
@@ -107,44 +187,44 @@ dBfuncs.newPassword = async (email, password) => {
 			//console.log('Email sent: ' + info.response)
 		}
 	})
-
-	return new Promise((resolve, reject) => {
-		pool.query(query, (err, results) => {
+	return new Promise(function(resolve, reject) {
+		pool.query(query, function(err, results) {
 			if (err) return reject(err)
 			return resolve(results)
 		})
 	})
 }
 
-dBfuncs.verifyUser = username => {
-	const query = "UPDATE Users SET verified = '" + 1 + "', emailVerifyId = '' WHERE username = '" + username + "';"
-	return new Promise((resolve, reject) => {
-		pool.query(query, (err, results) => {
+dBfuncs.verifyUser = function(username) {
+	var query = "UPDATE Users SET verified = '" + 1 + "', emailVerifyId = '' WHERE username = '" + username + "';"
+	return new Promise(function(resolve, reject) {
+		pool.query(query, function(err, results) {
 			if (err) return reject(err)
 			return resolve(results)
 		})
 	})
 }
 
-dBfuncs.findUser = (username, email) => {
+dBfuncs.findUser = function(username, email) {
 	var query = "SELECT * FROM Users WHERE username='" + username + "';"
 	if (email) query = "SELECT * FROM Users WHERE email='" + email + "';"
-	return new Promise((resolve, reject) => {
-		pool.query(query, (err, results) => {
+	return new Promise(function(resolve, reject) {
+		pool.query(query, function(err, results) {
 			if (err) return reject(err)
 			return resolve(results)
 		})
 	})
 }
 
-dBfuncs.deleteUser = (username, password) => {
-	const query = "DELETE FROM Users WHERE username='" + username + "' AND password='" + password + "';"
-	return new Promise((resolve, reject) => {
-		pool.query(query, (err, results) => {
+dBfuncs.deleteUser = function(username, password) {
+	var query = "DELETE FROM Users WHERE username='" + username + "' AND password='" + password + "';"
+	return new Promise(function(resolve, reject) {
+		pool.query(query, function(err, results) {
 			if (err) return reject(err)
 			return resolve(results)
 		})
 	})
 }
 
-export default dBfuncs
+var _default = dBfuncs
+exports.default = _default
