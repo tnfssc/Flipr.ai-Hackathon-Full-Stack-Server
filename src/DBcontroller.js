@@ -77,21 +77,32 @@ function _arrayWithHoles(arr) {
 	if (Array.isArray(arr)) return arr
 }
 
+var credentials = {
+	DATABASE_URL: 'remotemysql.com',
+	DATABASE_USERNAME: 'RoiPsAjBmd',
+	DATABASE_NAME: 'RoiPsAjBmd',
+	DATABASE_PASSWORD: 'JJ0A9R1AFK',
+	DATABASE_PORT: '3306',
+
+	EMAILVERIFIER_ADDRESS: 'noreply.tnfssc.flipr.ai.hackthon@gmail.com',
+	EMAILVERIFIER_PASSWORD: '1234qwer!@#$QWER',
+}
+
 var transporter = _nodemailer.default.createTransport({
 	service: 'gmail',
 	auth: {
-		user: process.env.EMAILVERIFIER_ADDRESS,
-		pass: process.env.EMAILVERIFIER_PASSWORD,
+		user: credentials.EMAILVERIFIER_ADDRESS,
+		pass: credentials.EMAILVERIFIER_PASSWORD,
 	},
 })
 
 var pool = _mysql.default.createPool({
 	connectionLimit: 10,
-	password: process.env.DATABASE_PASSWORD,
-	user: process.env.DATABASE_USERNAME,
-	database: process.env.DATABASE_NAME,
-	host: process.env.DATABASE_URL,
-	port: process.env.DATABASE_PORT,
+	password: credentials.DATABASE_PASSWORD,
+	user: credentials.DATABASE_USERNAME,
+	database: credentials.DATABASE_NAME,
+	host: credentials.DATABASE_URL,
+	port: credentials.DATABASE_PORT,
 })
 
 var dBfuncs = {}
@@ -112,7 +123,7 @@ dBfuncs.addUser = function(username, password, email) {
 		emailVerifyId +
 		"');"
 	var EmailToBeSent = {
-		from: process.env.EMAILVERIFIER_ADDRESS,
+		from: credentials.EMAILVERIFIER_ADDRESS,
 		to: email,
 		subject: 'Please click the link to verify email',
 		text: 'http://localhost:4000/verifyemail?token=' + emailVerifyId + '&username=' + username,
@@ -175,7 +186,7 @@ dBfuncs.newPassword = async function(email, password) {
 		email +
 		"';"
 	var EmailToBeSent = {
-		from: process.env.EMAILVERIFIER_ADDRESS,
+		from: credentials.EMAILVERIFIER_ADDRESS,
 		to: email,
 		subject: 'Please click the link to confirm reset password',
 		text: 'http://localhost:4000/resetpassword?token=' + emailVerifyId + '&email=' + email,
