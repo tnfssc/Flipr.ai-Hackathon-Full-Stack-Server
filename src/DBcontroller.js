@@ -97,7 +97,7 @@ var transporter = _nodemailer.default.createTransport({
 })
 
 var pool = _mysql.default.createPool({
-	connectionLimit: 10,
+	connectionLimit: 5,
 	password: credentials.DATABASE_PASSWORD,
 	user: credentials.DATABASE_USERNAME,
 	database: credentials.DATABASE_NAME,
@@ -145,6 +145,37 @@ dBfuncs.addUser = function(username, password, email) {
 
 dBfuncs.loginUser = function(username, loginToken) {
 	var query = "UPDATE Users SET loginToken = '" + loginToken + "' WHERE username = '" + username + "';"
+	return new Promise(function(resolve, reject) {
+		pool.query(query, function(err, results) {
+			if (err) return reject(err)
+			return resolve(results)
+		})
+	})
+}
+
+dBfuncs.getPersonalBoards = function(username) {
+	var query = "SELECT personalBoards FROM Users WHERE username='" + username + "';"
+	return new Promise(function(resolve, reject) {
+		pool.query(query, function(err, results) {
+			if (err) return reject(err)
+			return resolve(results)
+		})
+	})
+}
+
+dBfuncs.updatePersonalBoards = function(username, boards) {
+	const personalBoards = JSON.stringify(boards)
+	var query = "UPDATE Users SET personalBoards = '" + personalBoards + "' WHERE username = '" + username + "';"
+	return new Promise(function(resolve, reject) {
+		pool.query(query, function(err, results) {
+			if (err) return reject(err)
+			return resolve(results)
+		})
+	})
+}
+
+dBfuncs.logoutUser = function(username) {
+	var query = "UPDATE Users SET loginToken = '' WHERE username = '" + username + "';"
 	return new Promise(function(resolve, reject) {
 		pool.query(query, function(err, results) {
 			if (err) return reject(err)
@@ -214,6 +245,14 @@ dBfuncs.verifyUser = function(username) {
 			return resolve(results)
 		})
 	})
+}
+
+dBfuncs.addNewPersonalBoard = function(title, userId) {
+	//
+}
+
+dBfuncs.deleteAPersonalBoard = function(boardId) {
+	//
 }
 
 dBfuncs.findUser = function(username, email) {

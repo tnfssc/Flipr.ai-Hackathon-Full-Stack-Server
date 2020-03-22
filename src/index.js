@@ -91,6 +91,13 @@ var checkExistingUser = async function checkExistingUser(username, email) {
 	else return false
 }
 
+var getUserDetails = async function getUserDetails(username) {
+	var _await$dBfuncs$findUs = await _DBcontroller.default.findUser(username),
+		_await$dBfuncs$findUs2 = _slicedToArray(_await$dBfuncs$findUs, 1),
+		userData = _await$dBfuncs$findUs2[0]
+	return userData
+}
+
 var validateRegister = function validateRegister(username, password, email) {
 	if (!/^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(email)) return false
 	else if (username.length < 4 || password.length < 8) return false
@@ -116,6 +123,56 @@ app.post('/forgotpassword', function(req, res) {
 		res.send('No')
 	}
 })
+
+async function verifyToken(username, token) {
+	if (username && token) {
+		var _await$dBfuncs$findUs = await _DBcontroller.default.findUser(username),
+			_await$dBfuncs$findUs2 = _slicedToArray(_await$dBfuncs$findUs, 1),
+			userData = _await$dBfuncs$findUs2[0]
+		if (userData) {
+			if (userData.loginToken === token) {
+				return true
+			} else return false
+		} else return false
+	} else false
+}
+
+app.post('/loginwithtoken', function(req, res) {
+	verifyToken(req.body.username, req.body.token).then(function(valid) {
+		if (valid) {
+			res.send('Session Valid')
+		} else res.send('Session invalid')
+	})
+})
+
+app.post('/personalboards', async function(req, res) {
+	//send boards, exec function //input username, function provided, output boards
+	verifyToken(req.body.username, req.body.token).then(async function(valid) {
+		if (valid) {
+			if (req.body.func === 'none') {
+			} else if (req.body.func === 'new') {
+				const userData = await getUserDetails(req.body.username)
+				await _DBcontroller.default.addNewPersonalBoard(req.body.boardName, userData.id)
+			} else if (req.body.func === 'delete') {
+				await _DBcontroller.default.deleteAPersonalBoard(req.body.boardId)
+			} else {
+				console.log('invalid function')
+			}
+			const boards = await _DBcontroller.default.getPersonalBoards(req.body.username)
+			res.send(JSON.parse(boards[0].personalBoards))
+		} else res.send('No')
+	})
+})
+
+app.post('/logout', function(req, res) {
+	verifyToken(req.body.username, req.body.token).then(function(valid) {
+		if (valid) {
+			_DBcontroller.default.logoutUser(req.body.username)
+			res.send('Logout success')
+		} else res.send('No')
+	})
+})
+
 app.post('/login', async function(req, res) {
 	if (req.body.username && req.body.password) {
 		var _await$dBfuncs$findUs3 = await _DBcontroller.default.findUser(req.body.username),
