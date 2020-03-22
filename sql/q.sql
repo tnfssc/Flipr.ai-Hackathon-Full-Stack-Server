@@ -16,7 +16,8 @@ CREATE TABLE TeamsAndUsers (
     userId INT,
     FOREIGN KEY (teamId) REFERENCES Teams(teamId),
     FOREIGN KEY (userId) REFERENCES Users(id),
-    PRIMARY KEY (teamsAndUsersId)
+    PRIMARY KEY (teamsAndUsersId),
+    UNIQUE KEY(teamId, userId)
 );
 
 CREATE TABLE Teams (
@@ -31,7 +32,8 @@ CREATE TABLE PersonalBoards (
     userId INT,
     FOREIGN KEY (boardId) REFERENCES Boards(boardId),
     FOREIGN KEY (userId) REFERENCES Users(id),
-    PRIMARY KEY (personalBoardId)
+    PRIMARY KEY (personalBoardId),
+    UNIQUE KEY(boardId, userId)
 );
 
 CREATE TABLE TeamBoards (
@@ -40,7 +42,8 @@ CREATE TABLE TeamBoards (
     teamId INT,
     FOREIGN KEY (boardId) REFERENCES Boards(boardId),
     FOREIGN KEY (teamId) REFERENCES Teams(teamId),
-    PRIMARY KEY (teamBoardId)
+    PRIMARY KEY (teamBoardId),
+    UNIQUE KEY(boardId, teamId)
 );
 
 CREATE TABLE Boards (
@@ -61,6 +64,7 @@ CREATE TABLE Cards (
     cardId INT NOT NULL AUTO_INCREMENT,
     title VARCHAR(255) NOT NULL,
     state VARCHAR(255) NOT NULL,
+    dueDate DATE,
     listId INT,
     FOREIGN KEY (listId) REFERENCES Lists(listId),
     PRIMARY KEY (cardId)

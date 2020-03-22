@@ -182,13 +182,27 @@ app.post('/lists', async function(req, res) {
 })
 
 app.post('/cards', async function(req, res) {
-	res.send([
-		{ cardId: 1, title: 'not a card', state: 'no status' },
-		{ cardId: 1, title: 'not a card', state: 'no status' },
-		{ cardId: 1, title: 'not a card', state: 'no status' },
-		{ cardId: 1, title: 'not a card', state: 'no status' },
-		{ cardId: 1, title: 'not a card', state: 'no status' },
-	])
+	verifyToken(req.body.username, req.body.token).then(async function(valid) {
+		if (valid) {
+			if (req.body.func === 'none') {
+			} else if (req.body.func === 'new') {
+				await _DBcontroller.default.addNewCard(req.body.cardName, req.body.listId)
+			} else if (req.body.func === 'delete') {
+				await _DBcontroller.default.deleteACard(req.body.cardId)
+			} else if (req.body.func === 'update') {
+				await _DBcontroller.default.updateCard(
+					req.body.cardId,
+					req.body.card.cardId,
+					null,
+					req.body.card.dueDate
+				)
+			} else {
+				console.log('invalid function')
+			}
+			const response = await _DBcontroller.default.getCards(req.body.listId)
+			res.send(response)
+		} else res.send('No')
+	})
 })
 
 app.post('/logout', function(req, res) {
