@@ -8,7 +8,7 @@ exports.default = void 0
 var _mysql = _interopRequireDefault(require('mysql'))
 
 require('dotenv/config')
-
+var _lodash = require('lodash')
 var _crypto = _interopRequireDefault(require('crypto'))
 
 var _nodemailer = _interopRequireDefault(require('nodemailer'))
@@ -238,26 +238,100 @@ dBfuncs.verifyUser = function(username) {
 }
 
 dBfuncs.getPersonalBoards = function(userId) {
-	//need query
-	var query = "SELECT boardId FROM personalBoards WHERE userId='" + userId + "';"
+	var query =
+		'SELECT Boards.boardId, Boards.title FROM PersonalBoards, Boards where PersonalBoards.userId=? AND Boards.boardId=PersonalBoards.boardId;'
+	var rows = [userId]
 	return new Promise(function(resolve, reject) {
-		pool.query(query, function(err, results) {
+		pool.query(query, rows, function(err, results) {
 			if (err) return reject(err)
 			return resolve(results)
 		})
 	})
 }
 
+var handleSqlError = function(query, rows, reject) {
+	var error = {
+		message: 'Failed to execute query: ' + query + ' rows: ' + rows,
+	}
+	// TODO: remove log
+	console.error(error)
+	return reject(error)
+}
+
 dBfuncs.addNewPersonalBoard = function(title, userId) {
-	//
+	var query = 'INSERT INTO Boards(title) VALUES(?)'
+	var rows = [title]
+
+	return new Promise(function(resolve, reject) {
+		pool.query(query, rows, function(err, results) {
+			if (err) {
+				console.error(err)
+				return reject(err)
+			}
+			if (_lodash.isNull(results.insertId)) {
+				return handleSqlError(query, rows, reject)
+			} else {
+				var updatePersonalBoardQuery = 'INSERT INTO PersonalBoards(boardId, userId) VALUES(?, ?)'
+				var rows2 = [results.insertId, userId]
+				pool.query(updatePersonalBoardQuery, rows2, function(err2, results2) {
+					if (err2) {
+						console.error(err2.sqlMessage)
+						return reject(err2)
+					} else if (_lodash.isNull(results2.insertId)) {
+						return handleSqlError(updatePersonalBoardQuery, rows2, reject)
+					} else {
+						return resolve(results2)
+					}
+				})
+			}
+		})
+	})
 }
 
 dBfuncs.deleteAPersonalBoard = function(boardId) {
 	//
 }
 
-dBfuncs.addNewList = function(listName, boardId) {
+dBfuncs.addTeamBoard = function(title, teamId) {
 	//
+}
+
+dBfuncs.deleteTeamBoard = function(boardId) {
+	//
+}
+
+dBfuncs.createTeam = function(teamName, userId) {
+	//
+}
+
+dBfuncs.addTeamMember = function(teamId, userId) {
+	//
+}
+
+dBfuncs.deleteTeam = function(teamId) {
+	//
+}
+
+dBfuncs.removeTeamMember = function(teamId, userId) {
+	//
+}
+
+dBfuncs.addNewList = function(listName, boardId) {
+	var query = 'INSERT INTO Lists(title, boardId) VALUES(?, ?)'
+	var rows = [listName, boardId]
+
+	return new Promise(function(resolve, reject) {
+		pool.query(query, rows, function(err, results) {
+			if (err) {
+				console.error(err)
+				return reject(err)
+			}
+			if (_lodash.isNull(results.insertId)) {
+				return handleSqlError(query, rows, reject)
+			}
+			return resolve(results)
+		})
+	})
 }
 
 dBfuncs.deleteAList = function(listId) {
@@ -265,6 +339,33 @@ dBfuncs.deleteAList = function(listId) {
 }
 
 dBfuncs.getLists = function(boardId) {
+	var query = 'SELECT * from Lists WHERE boardId=?;'
+	var rows = [boardId]
+	return new Promise(function(resolve, reject) {
+		pool.query(query, rows, function(err, results) {
+			if (err) return reject(err)
+			return resolve(results)
+		})
+	})
+}
+
+dBfuncs.getCards = function(listId) {
+	//
+}
+
+dBfuncs.addCard = function(cardName, listId) {
+	//
+}
+
+dBfuncs.updateCard = function(cardId) {
+	//
+}
+
+dBfuncs.deleteCard = function(cardId) {
+	//
+}
+
+dBfuncs.getCard = function(cardId) {
 	//
 }
 
