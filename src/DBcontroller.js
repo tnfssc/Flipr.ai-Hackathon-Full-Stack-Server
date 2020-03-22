@@ -153,16 +153,6 @@ dBfuncs.loginUser = function(username, loginToken) {
 	})
 }
 
-dBfuncs.getPersonalBoards = function(username) {
-	var query = "SELECT personalBoards FROM Users WHERE username='" + username + "';"
-	return new Promise(function(resolve, reject) {
-		pool.query(query, function(err, results) {
-			if (err) return reject(err)
-			return resolve(results)
-		})
-	})
-}
-
 dBfuncs.updatePersonalBoards = function(username, boards) {
 	const personalBoards = JSON.stringify(boards)
 	var query = "UPDATE Users SET personalBoards = '" + personalBoards + "' WHERE username = '" + username + "';"
@@ -247,11 +237,34 @@ dBfuncs.verifyUser = function(username) {
 	})
 }
 
+dBfuncs.getPersonalBoards = function(userId) {
+	//need query
+	var query = "SELECT boardId FROM personalBoards WHERE userId='" + userId + "';"
+	return new Promise(function(resolve, reject) {
+		pool.query(query, function(err, results) {
+			if (err) return reject(err)
+			return resolve(results)
+		})
+	})
+}
+
 dBfuncs.addNewPersonalBoard = function(title, userId) {
 	//
 }
 
 dBfuncs.deleteAPersonalBoard = function(boardId) {
+	//
+}
+
+dBfuncs.addNewList = function(listName, boardId) {
+	//
+}
+
+dBfuncs.deleteAList = function(listId) {
+	//
+}
+
+dBfuncs.getLists = function(boardId) {
 	//
 }
 

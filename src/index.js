@@ -146,7 +146,6 @@ app.post('/loginwithtoken', function(req, res) {
 })
 
 app.post('/personalboards', async function(req, res) {
-	//send boards, exec function //input username, function provided, output boards
 	verifyToken(req.body.username, req.body.token).then(async function(valid) {
 		if (valid) {
 			if (req.body.func === 'none') {
@@ -158,8 +157,43 @@ app.post('/personalboards', async function(req, res) {
 			} else {
 				console.log('invalid function')
 			}
-			const boards = await _DBcontroller.default.getPersonalBoards(req.body.username)
-			res.send(JSON.parse(boards[0].personalBoards))
+			const userData = await getUserDetails(req.body.username)
+			const response = await _DBcontroller.default.getPersonalBoards(userData.id)
+			res.send(JSON.parse(response[0]))
+		} else res.send('No')
+	})
+})
+
+app.post('/lists', async function(req, res) {
+	verifyToken(req.body.username, req.body.token).then(async function(valid) {
+		if (valid) {
+			if (req.body.func === 'none') {
+			} else if (req.body.func === 'new') {
+				await _DBcontroller.default.addNewList(req.body.listName, req.body.boardId)
+			} else if (req.body.func === 'delete') {
+				await _DBcontroller.default.deleteAList(req.body.listId)
+			} else {
+				console.log('invalid function')
+			}
+			const response = await _DBcontroller.default.getLists(req.body.boardId)
+			res.send(JSON.parse(response[0]))
+		} else res.send('No')
+	})
+})
+
+app.post('/lists', async function(req, res) {
+	verifyToken(req.body.username, req.body.token).then(async function(valid) {
+		if (valid) {
+			if (req.body.func === 'none') {
+			} else if (req.body.func === 'new') {
+				await _DBcontroller.default.addNewList(req.body.listName, req.body.boardId)
+			} else if (req.body.func === 'delete') {
+				await _DBcontroller.default.deleteAList(req.body.listId)
+			} else {
+				console.log('invalid function')
+			}
+			const response = await _DBcontroller.default.getLists(req.body.boardId)
+			res.send(JSON.parse(response[0]))
 		} else res.send('No')
 	})
 })
