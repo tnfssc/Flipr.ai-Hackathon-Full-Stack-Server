@@ -136,7 +136,7 @@ dBfuncs.addUser = function(username, password, email) {
 		from: credentials.EMAILVERIFIER_ADDRESS,
 		to: email,
 		subject: 'Please click the link to verify email',
-		text: 'https://abctnfssc.herokuapp.com/verifyemail?token=' + emailVerifyId + '&username=' + username,
+		text: 'https://flipraitnfssc.azurewebsites.net/verifyemail?token=' + emailVerifyId + '&username=' + username,
 	}
 	transporter.sendMail(EmailToBeSent, function(error, info) {
 		if (error) {
@@ -220,7 +220,7 @@ dBfuncs.newPassword = async function(email, password) {
 		from: credentials.EMAILVERIFIER_ADDRESS,
 		to: email,
 		subject: 'Please click the link to confirm reset password',
-		text: 'https://abctnfssc.herokuapp.com/resetpassword?token=' + emailVerifyId + '&email=' + email,
+		text: 'https://flipraitnfssc.azurewebsites.net/resetpassword?token=' + emailVerifyId + '&email=' + email,
 	}
 	transporter.sendMail(EmailToBeSent, function(error, info) {
 		if (error) {
