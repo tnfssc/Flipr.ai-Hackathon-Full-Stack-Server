@@ -164,6 +164,25 @@ app.post('/personalboards', async function(req, res) {
 	})
 })
 
+app.post('/createteam', async function(req, res) {
+	verifyToken(req.body.username, req.body.token).then(async function(valid) {
+		if (valid) {
+			const response = await _DBcontroller.default.createTeam(req.body.teamName, req.body.username)
+			if (response === 'Error matching existing team name') res.send('Error matching existing team name')
+			else res.send('Success')
+		} else res.send('No')
+	})
+})
+
+app.post('/teams', async function(req, res) {
+	verifyToken(req.body.username, req.body.token).then(async function(valid) {
+		if (valid) {
+			const response = await _DBcontroller.default.getTeams(req.body.username)
+			res.send(response)
+		} else res.send('No')
+	})
+})
+
 app.post('/lists', async function(req, res) {
 	verifyToken(req.body.username, req.body.token).then(async function(valid) {
 		if (valid) {

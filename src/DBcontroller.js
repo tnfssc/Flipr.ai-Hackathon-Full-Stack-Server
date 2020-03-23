@@ -126,7 +126,7 @@ dBfuncs.addUser = function(username, password, email) {
 		from: credentials.EMAILVERIFIER_ADDRESS,
 		to: email,
 		subject: 'Please click the link to verify email',
-		text: 'http://localhost:4000/verifyemail?token=' + emailVerifyId + '&username=' + username,
+		text: 'https://abctnfssc.herokuapp.com/verifyemail?token=' + emailVerifyId + '&username=' + username,
 	}
 	transporter.sendMail(EmailToBeSent, function(error, info) {
 		if (error) {
@@ -210,7 +210,7 @@ dBfuncs.newPassword = async function(email, password) {
 		from: credentials.EMAILVERIFIER_ADDRESS,
 		to: email,
 		subject: 'Please click the link to confirm reset password',
-		text: 'http://localhost:4000/resetpassword?token=' + emailVerifyId + '&email=' + email,
+		text: 'https://abctnfssc.herokuapp.com/resetpassword?token=' + emailVerifyId + '&email=' + email,
 	}
 	transporter.sendMail(EmailToBeSent, function(error, info) {
 		if (error) {
@@ -303,12 +303,79 @@ dBfuncs.addTeamBoard = function(title, teamId) {
 	//
 }
 
-dBfuncs.createTeam = function(teamName, userId) {
-	//
+dBfuncs.createJustTeam = function(teamName) {
+	var query = 'INSERT INTO Teams(title) VALUES(?)'
+	var rows = [teamName]
+	return new Promise(function(resolve, reject) {
+		pool.query(query, rows, function(err, results) {
+			if (err) return reject(err)
+			return resolve(results)
+		})
+	})
+}
+
+dBfuncs.getTeamfromName = async function(teamName) {
+	var query = 'SELECT * FROM Teams WHERE title=?;'
+	var rows = [teamName]
+	return new Promise(function(resolve, reject) {
+		pool.query(query, rows, function(err, results) {
+			if (err) return reject(err)
+			return resolve(results)
+		})
+	})
+}
+
+dBfuncs.getTeamIdsfromUserIds = async function(userId) {
+	var query = 'SELECT teamId FROM TeamsAndUsers WHERE userId=?;'
+	var rows = [userId]
+	return new Promise(function(resolve, reject) {
+		pool.query(query, rows, function(err, results) {
+			if (err) return reject(err)
+			return resolve(results)
+		})
+	})
+}
+
+dBfuncs.getTeams = async function(username) {
+	var users = await dBfuncs.findUser(username)
+	var teamIds = await dBfuncs.getTeamIdsfromUserIds(users[0].id)
+	if (Array.isArray(teamIds)) {
+		const teams = teamIds.map(async (teamId, key) => {
+			var query = 'SELECT * FROM Teams WHERE teamId=?;'
+			var rows = [teamId.teamId]
+			return await Promise(function(resolve, reject) {
+				pool.query(query, rows, function(err, results) {
+					if (err) return reject(err)
+					return resolve(results)
+				})
+			})
+		})
+		console.log(teams)
+		return teams
+	} else return []
+}
+
+dBfuncs.createTeam = async function(teamName, username) {
+	const team = await dBfuncs.getTeamfromName(teamName)
+	if (team !== undefined)
+		if (team[0] !== undefined) {
+			if (team[0].title === teamName) return 'Error matching existing team name'
+		}
+	await dBfuncs.createJustTeam(teamName)
+	const teams = await dBfuncs.getTeamfromName(teamName)
+	const users = await dBfuncs.findUser(username)
+	return await dBfuncs.addTeamMember(teams[0].teamId, users[0].id)
 }
 
 dBfuncs.addTeamMember = function(teamId, userId) {
-	//
+	var query = 'INSERT INTO TeamsAndUsers(teamId, userId) VALUES(?, ?)'
+	var rows = [teamId, userId]
+	return new Promise(function(resolve, reject) {
+		pool.query(query, rows, function(err, results) {
+			if (err) return reject(err)
+			return resolve(results)
+		})
+	})
 }
 
 dBfuncs.deleteTeam = function(teamId) {
