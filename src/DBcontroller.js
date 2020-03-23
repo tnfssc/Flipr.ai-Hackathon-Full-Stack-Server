@@ -8,13 +8,19 @@ exports.default = void 0
 var _mysql = _interopRequireDefault(require('mysql'))
 
 require('dotenv/config')
+
 var _lodash = require('lodash')
+
 var _crypto = _interopRequireDefault(require('crypto'))
 
 var _nodemailer = _interopRequireDefault(require('nodemailer'))
 
 function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
+	return obj && obj.__esModule
+		? obj
+		: {
+				default: obj,
+		  }
 }
 
 function _slicedToArray(arr, i) {
@@ -43,9 +49,11 @@ function _unsupportedIterableToArray(o, minLen) {
 
 function _arrayLikeToArray(arr, len) {
 	if (len == null || len > arr.length) len = arr.length
+
 	for (var i = 0, arr2 = new Array(len); i < len; i++) {
 		arr2[i] = arr[i]
 	}
+
 	return arr2
 }
 
@@ -55,9 +63,11 @@ function _iterableToArrayLimit(arr, i) {
 	var _n = true
 	var _d = false
 	var _e = undefined
+
 	try {
 		for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
 			_arr.push(_s.value)
+
 			if (i && _arr.length === i) break
 		}
 	} catch (err) {
@@ -70,6 +80,7 @@ function _iterableToArrayLimit(arr, i) {
 			if (_d) throw _e
 		}
 	}
+
 	return _arr
 }
 
@@ -83,7 +94,6 @@ var credentials = {
 	DATABASE_NAME: 'RoiPsAjBmd',
 	DATABASE_PASSWORD: 'JJ0A9R1AFK',
 	DATABASE_PORT: '3306',
-
 	EMAILVERIFIER_ADDRESS: 'noreply.tnfssc.flipr.ai.hackthon@gmail.com',
 	EMAILVERIFIER_PASSWORD: '1234qwer!@#$QWER',
 }
@@ -154,7 +164,7 @@ dBfuncs.loginUser = function(username, loginToken) {
 }
 
 dBfuncs.updatePersonalBoards = function(username, boards) {
-	const personalBoards = JSON.stringify(boards)
+	var personalBoards = JSON.stringify(boards)
 	var query = "UPDATE Users SET personalBoards = '" + personalBoards + "' WHERE username = '" + username + "';"
 	return new Promise(function(resolve, reject) {
 		pool.query(query, function(err, results) {
@@ -249,23 +259,23 @@ dBfuncs.getPersonalBoards = function(userId) {
 	})
 }
 
-var handleSqlError = function(query, rows, reject) {
+var handleSqlError = function handleSqlError(query, rows, reject) {
 	var error = {
 		message: 'Failed to execute query: ' + query + ' rows: ' + rows,
-	}
-	//console.log(error)
+	} //console.log(error)
+
 	return reject(error)
 }
 
 dBfuncs.addNewPersonalBoard = function(title, userId) {
 	var query = 'INSERT INTO Boards(title) VALUES(?)'
 	var rows = [title]
-
 	return new Promise(function(resolve, reject) {
 		pool.query(query, rows, function(err, results) {
 			if (err) {
 				return reject(err)
 			}
+
 			if (_lodash.isNull(results.insertId)) {
 				return handleSqlError(query, rows, reject)
 			} else {
@@ -286,13 +296,13 @@ dBfuncs.addNewPersonalBoard = function(title, userId) {
 }
 
 dBfuncs.deleteBoard = async function(boardId) {
-	return await dBfuncs.getLists(boardId).then(async lists => {
+	return await dBfuncs.getLists(boardId).then(async function(lists) {
 		if (lists || []) {
 			var deleteListsPromises = []
 			lists.map(function(listValue, key) {
 				deleteListsPromises.push(dBfuncs.deleteAList(listValue.listId))
 			})
-			return await Promise.all(deleteListsPromises).then(listsResults => {
+			return await Promise.all(deleteListsPromises).then(function(listsResults) {
 				return deleteJustBoard(boardId)
 			})
 		}
@@ -339,8 +349,9 @@ dBfuncs.getTeamIdsfromUserIds = async function(userId) {
 dBfuncs.getTeams = async function(username) {
 	var users = await dBfuncs.findUser(username)
 	var teamIds = await dBfuncs.getTeamIdsfromUserIds(users[0].id)
+
 	if (Array.isArray(teamIds)) {
-		const teams = teamIds.map(async (teamId, key) => {
+		var teams = teamIds.map(async function(teamId, key) {
 			var query = 'SELECT * FROM Teams WHERE teamId=?;'
 			var rows = [teamId.teamId]
 			return await Promise(function(resolve, reject) {
@@ -356,14 +367,14 @@ dBfuncs.getTeams = async function(username) {
 }
 
 dBfuncs.createTeam = async function(teamName, username) {
-	const team = await dBfuncs.getTeamfromName(teamName)
+	var team = await dBfuncs.getTeamfromName(teamName)
 	if (team !== undefined)
 		if (team[0] !== undefined) {
 			if (team[0].title === teamName) return 'Error matching existing team name'
 		}
 	await dBfuncs.createJustTeam(teamName)
-	const teams = await dBfuncs.getTeamfromName(teamName)
-	const users = await dBfuncs.findUser(username)
+	var teams = await dBfuncs.getTeamfromName(teamName)
+	var users = await dBfuncs.findUser(username)
 	return await dBfuncs.addTeamMember(teams[0].teamId, users[0].id)
 }
 
@@ -389,15 +400,16 @@ dBfuncs.removeTeamMember = function(teamId, userId) {
 dBfuncs.addNewList = function(listName, boardId) {
 	var query = 'INSERT INTO Lists(title, boardId) VALUES(?, ?)'
 	var rows = [listName, boardId]
-
 	return new Promise(function(resolve, reject) {
 		pool.query(query, rows, function(err, results) {
 			if (err) {
 				return reject(err)
 			}
+
 			if (_lodash.isNull(results.insertId)) {
 				return handleSqlError(query, rows, reject)
 			}
+
 			return resolve(results)
 		})
 	})
@@ -409,6 +421,7 @@ function executeQuery(query, rows) {
 			if (err) {
 				return reject(err)
 			}
+
 			return resolve(results)
 		})
 	})
@@ -417,12 +430,10 @@ function executeQuery(query, rows) {
 function deleteJustBoard(boardId) {
 	var query = 'DELETE FROM Boards WHERE boardId=?'
 	var rows = [boardId]
-
 	var pquery = 'DELETE FROM PersonalBoards WHERE boardId=?'
 	var tquery = 'DELETE FROM TeamBoards WHERE boardId=?'
-
-	executeQuery(pquery, rows).then(result => {
-		executeQuery(tquery, rows).then(result2 => {
+	executeQuery(pquery, rows).then(function(result) {
+		executeQuery(tquery, rows).then(function(result2) {
 			return executeQuery(query, rows)
 		})
 	})
@@ -431,7 +442,6 @@ function deleteJustBoard(boardId) {
 function deleteJustList(listId) {
 	var query = 'DELETE FROM Lists WHERE listId=?'
 	var rows = [listId]
-
 	return executeQuery(query, rows)
 }
 
@@ -448,7 +458,7 @@ dBfuncs.deleteAList = function(listId) {
 			results.map(function(cardValue, key) {
 				deleteCardsPromises.push(dBfuncs.deleteCard(cardValue.cardId))
 			})
-			Promise.all(deleteCardsPromises).then(resultsList => {
+			Promise.all(deleteCardsPromises).then(function(resultsList) {
 				deleteJustList(listId)
 			})
 			return resolve(results)
@@ -490,15 +500,16 @@ dBfuncs.updateCard = function(cardId, cardName, listId, dueDate, state) {
 dBfuncs.deleteCard = function(cardId) {
 	var query = 'DELETE FROM Cards WHERE cardId=?'
 	var rows = [cardId]
-
 	return new Promise(function(resolve, reject) {
 		pool.query(query, rows, function(err, results) {
 			if (err) {
 				return reject(err)
 			}
+
 			if (_lodash.isNull(results.insertId)) {
 				return handleSqlError(query, rows, reject)
 			}
+
 			return resolve(results)
 		})
 	})
