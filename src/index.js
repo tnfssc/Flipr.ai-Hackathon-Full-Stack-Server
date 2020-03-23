@@ -153,7 +153,7 @@ app.post('/personalboards', async function(req, res) {
 				const userData = await getUserDetails(req.body.username)
 				await _DBcontroller.default.addNewPersonalBoard(req.body.boardName, userData.id)
 			} else if (req.body.func === 'delete') {
-				await _DBcontroller.default.deleteAPersonalBoard(req.body.boardId)
+				await _DBcontroller.default.deleteBoard(req.body.boardId)
 			} else {
 				console.log('invalid function')
 			}
@@ -171,12 +171,15 @@ app.post('/lists', async function(req, res) {
 			} else if (req.body.func === 'new') {
 				await _DBcontroller.default.addNewList(req.body.listName, req.body.boardId)
 			} else if (req.body.func === 'delete') {
+				//console.log(req.body)
 				await _DBcontroller.default.deleteAList(req.body.listId)
 			} else {
 				console.log('invalid function')
 			}
-			const response = await _DBcontroller.default.getLists(req.body.boardId)
-			res.send(response)
+			setTimeout(async () => {
+				const response = await _DBcontroller.default.getLists(req.body.boardId)
+				res.send(response)
+			}, 1000)
 		} else res.send('No')
 	})
 })
@@ -186,15 +189,16 @@ app.post('/cards', async function(req, res) {
 		if (valid) {
 			if (req.body.func === 'none') {
 			} else if (req.body.func === 'new') {
-				await _DBcontroller.default.addNewCard(req.body.cardName, req.body.listId)
+				await _DBcontroller.default.addCard(req.body.cardName, req.body.listId, req.body.dueDate)
 			} else if (req.body.func === 'delete') {
-				await _DBcontroller.default.deleteACard(req.body.cardId)
+				await _DBcontroller.default.deleteCard(req.body.cardId)
 			} else if (req.body.func === 'update') {
 				await _DBcontroller.default.updateCard(
 					req.body.cardId,
-					req.body.card.cardId,
+					req.body.cardName,
 					null,
-					req.body.card.dueDate
+					req.body.dueDate,
+					req.body.state
 				)
 			} else {
 				console.log('invalid function')
@@ -244,6 +248,7 @@ app.post('/login', async function(req, res) {
 		res.sendStatus(406)
 	}
 })
+
 app.get('/verifyemail', async function(req, res) {
 	if (req.query.token && req.query.username) {
 		var _await$dBfuncs$findUs5 = await _DBcontroller.default.findUser(req.query.username),
@@ -261,6 +266,7 @@ app.get('/verifyemail', async function(req, res) {
 		} else res.send('(-__-)')
 	} else res.send('(-_-)')
 })
+
 app.get('/resetpassword', async function(req, res) {
 	if (req.query.token && req.query.email) {
 		var _await$dBfuncs$findUs7 = await _DBcontroller.default.findUser(undefined, req.query.email),
@@ -276,6 +282,7 @@ app.get('/resetpassword', async function(req, res) {
 		} else res.send('(-__-)')
 	} else res.send('(-_-)')
 })
+
 app.post('/register', function(req, res) {
 	if (req.body.username && req.body.password && req.body.confirmpassword) {
 		if (req.body.password === req.body.confirmpassword) {

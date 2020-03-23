@@ -253,8 +253,7 @@ var handleSqlError = function(query, rows, reject) {
 	var error = {
 		message: 'Failed to execute query: ' + query + ' rows: ' + rows,
 	}
-	// TODO: remove log
-	console.error(error)
+	//console.log(error)
 	return reject(error)
 }
 
@@ -265,7 +264,6 @@ dBfuncs.addNewPersonalBoard = function(title, userId) {
 	return new Promise(function(resolve, reject) {
 		pool.query(query, rows, function(err, results) {
 			if (err) {
-				console.error(err)
 				return reject(err)
 			}
 			if (_lodash.isNull(results.insertId)) {
@@ -275,7 +273,6 @@ dBfuncs.addNewPersonalBoard = function(title, userId) {
 				var rows2 = [results.insertId, userId]
 				pool.query(updatePersonalBoardQuery, rows2, function(err2, results2) {
 					if (err2) {
-						console.error(err2.sqlMessage)
 						return reject(err2)
 					} else if (_lodash.isNull(results2.insertId)) {
 						return handleSqlError(updatePersonalBoardQuery, rows2, reject)
@@ -288,15 +285,21 @@ dBfuncs.addNewPersonalBoard = function(title, userId) {
 	})
 }
 
-dBfuncs.deleteAPersonalBoard = function(boardId) {
-	//
+dBfuncs.deleteBoard = async function(boardId) {
+	return await dBfuncs.getLists(boardId).then(async lists => {
+		if (lists || []) {
+			var deleteListsPromises = []
+			lists.map(function(listValue, key) {
+				deleteListsPromises.push(dBfuncs.deleteAList(listValue.listId))
+			})
+			return await Promise.all(deleteListsPromises).then(listsResults => {
+				return deleteJustBoard(boardId)
+			})
+		}
+	})
 }
 
 dBfuncs.addTeamBoard = function(title, teamId) {
-	//
-}
-
-dBfuncs.deleteTeamBoard = function(boardId) {
 	//
 }
 
@@ -323,7 +326,6 @@ dBfuncs.addNewList = function(listName, boardId) {
 	return new Promise(function(resolve, reject) {
 		pool.query(query, rows, function(err, results) {
 			if (err) {
-				console.error(err)
 				return reject(err)
 			}
 			if (_lodash.isNull(results.insertId)) {
@@ -334,35 +336,105 @@ dBfuncs.addNewList = function(listName, boardId) {
 	})
 }
 
-dBfuncs.deleteAList = function(listId) {
-	//
-}
-
-dBfuncs.getLists = function(boardId) {
-	var query = 'SELECT * from Lists WHERE boardId=?;'
-	var rows = [boardId]
+function executeQuery(query, rows) {
 	return new Promise(function(resolve, reject) {
 		pool.query(query, rows, function(err, results) {
-			if (err) return reject(err)
+			if (err) {
+				return reject(err)
+			}
 			return resolve(results)
 		})
 	})
 }
 
+function deleteJustBoard(boardId) {
+	var query = 'DELETE FROM Boards WHERE boardId=?'
+	var rows = [boardId]
+
+	var pquery = 'DELETE FROM PersonalBoards WHERE boardId=?'
+	var tquery = 'DELETE FROM TeamBoards WHERE boardId=?'
+
+	executeQuery(pquery, rows).then(result => {
+		executeQuery(tquery, rows).then(result2 => {
+			return executeQuery(query, rows)
+		})
+	})
+}
+
+function deleteJustList(listId) {
+	var query = 'DELETE FROM Lists WHERE listId=?'
+	var rows = [listId]
+
+	return executeQuery(query, rows)
+}
+
+dBfuncs.deleteAList = function(listId) {
+	var query = 'SELECT * from Cards where listId=?'
+	var rows = [listId]
+	return new Promise(function(resolve, reject) {
+		pool.query(query, rows, function(err, results) {
+			if (err) {
+				return reject(err)
+			}
+
+			var deleteCardsPromises = []
+			results.map(function(cardValue, key) {
+				deleteCardsPromises.push(dBfuncs.deleteCard(cardValue.cardId))
+			})
+			Promise.all(deleteCardsPromises).then(resultsList => {
+				deleteJustList(listId)
+			})
+			return resolve(results)
+		})
+	})
+}
+
+dBfuncs.getLists = function(boardId) {
+	var query = 'SELECT * from Lists WHERE boardId=?;'
+	var rows = [boardId]
+	return executeQuery(query, rows)
+}
+
 dBfuncs.getCards = function(listId) {
-	//
+	var query = 'SELECT * from Cards WHERE listId=?;'
+	var rows = [listId]
+	return executeQuery(query, rows)
 }
 
-dBfuncs.addCard = function(cardName, listId) {
-	//
+dBfuncs.addCard = function(cardName, listId, dueDate) {
+	var query = 'INSERT INTO Cards(title, listId, dueDate, state) VALUES(?, ?, ?, ?)'
+	var rows = [cardName, listId, dueDate, 'Just Created']
+	return executeQuery(query, rows)
 }
 
-dBfuncs.updateCard = function(cardId) {
-	//
+dBfuncs.updateCard = function(cardId, cardName, listId, dueDate, state) {
+	var query = 'UPDATE Cards SET title = ?, dueDate=?, state= ? WHERE cardId=?'
+	var rows = [cardName, dueDate, state, cardId]
+
+	if (!_lodash.isNull(listId)) {
+		// move action not implemented
+		query = 'UPDATE Cards SET title = ?, listId= ?, dueDate=?, state=? WHERE cardId=?'
+		rows = [cardName, listId, dueDate, state, cardId]
+	}
+
+	return executeQuery(query, rows)
 }
 
 dBfuncs.deleteCard = function(cardId) {
-	//
+	var query = 'DELETE FROM Cards WHERE cardId=?'
+	var rows = [cardId]
+
+	return new Promise(function(resolve, reject) {
+		pool.query(query, rows, function(err, results) {
+			if (err) {
+				return reject(err)
+			}
+			if (_lodash.isNull(results.insertId)) {
+				return handleSqlError(query, rows, reject)
+			}
+			return resolve(results)
+		})
+	})
 }
 
 dBfuncs.getCard = function(cardId) {
@@ -382,12 +454,7 @@ dBfuncs.findUser = function(username, email) {
 
 dBfuncs.deleteUser = function(username, password) {
 	var query = "DELETE FROM Users WHERE username='" + username + "' AND password='" + password + "';"
-	return new Promise(function(resolve, reject) {
-		pool.query(query, function(err, results) {
-			if (err) return reject(err)
-			return resolve(results)
-		})
-	})
+	return executeQuery(query, rows)
 }
 
 var _default = dBfuncs
